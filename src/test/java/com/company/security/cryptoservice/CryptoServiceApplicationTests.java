@@ -1,4 +1,4 @@
-package com.company.security.crypto_service;
+package com.company.security.cryptoservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

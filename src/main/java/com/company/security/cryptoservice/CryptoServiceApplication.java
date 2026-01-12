@@ -1,4 +1,4 @@
-package com.company.security.crypto_service;
+package com.company.security.cryptoservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
