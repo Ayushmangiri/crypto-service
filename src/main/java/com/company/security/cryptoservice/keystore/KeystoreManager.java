@@ -3,9 +3,10 @@ package com.company.security.cryptoservice.keystore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 @Component
 public class KeystoreManager {
@@ -16,27 +17,44 @@ public class KeystoreManager {
     @Value("${crypto.keystore.type}")
     private String keystoreType;
 
-    public SecretKey getSecretKey(String alias) {
+    private static final String KEYSTORE_FILE = "keystore.jks";
+
+    //  Public key → encryption
+    public PublicKey getPublicKey(String alias) {
         try {
-            KeyStore keyStore = KeyStore.getInstance(keystoreType);
+            KeyStore keyStore = loadKeyStore();
+            return keyStore.getCertificate(alias).getPublicKey();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to load public key", e);
+        }
+    }
 
-            InputStream is = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("keystore.p12");
-
-            if (is == null) {
-                throw new RuntimeException("keystore.p12 not found in resources");
-            }
-
-            keyStore.load(is, keystorePassword.toCharArray());
-
-            return (SecretKey) keyStore.getKey(
+    //  Private key → decryption
+    public PrivateKey getPrivateKey(String alias) {
+        try {
+            KeyStore keyStore = loadKeyStore();
+            return (PrivateKey) keyStore.getKey(
                     alias,
                     keystorePassword.toCharArray()
             );
-
         } catch (Exception e) {
-            throw new RuntimeException("Unable to load key from keystore", e);
+            throw new RuntimeException("Unable to load private key", e);
         }
+    }
+
+    //  Common keystore loader
+    private KeyStore loadKeyStore() throws Exception {
+        KeyStore keyStore = KeyStore.getInstance(keystoreType);
+
+        InputStream is = getClass()
+                .getClassLoader()
+                .getResourceAsStream(KEYSTORE_FILE);
+
+        if (is == null) {
+            throw new RuntimeException("keystore.jks not found in resources");
+        }
+
+        keyStore.load(is, keystorePassword.toCharArray());
+        return keyStore;
     }
 }
