@@ -17,7 +17,7 @@ public class KeystoreManager {
     @Value("${crypto.keystore.type}")
     private String keystoreType;
 
-    private static final String KEYSTORE_FILE = "keystore.jks";
+    private static final String KEYSTORE_FILE = "com/company/security/cryptoservice/keystore/keystore.jks";
 
     //  Public key → encryption
     public PublicKey getPublicKey(String alias) {
