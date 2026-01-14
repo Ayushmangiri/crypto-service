@@ -1,22 +1,44 @@
 package com.company.security.cryptoservice.dto;
 
 public class DecryptRequest {
-    private String keyAlias;
-    private String encryptedText;
 
-    public String getKeyAlias() {
-        return keyAlias;
+    private String certAlias;
+
+    private String encryptedAesKey;
+
+    private String encryptedData;
+
+    private String ivHex;
+
+    public String getCertAlias() {
+        return certAlias;
     }
 
-    public void setKeyAlias(String keyAlias) {
-        this.keyAlias = keyAlias;
+    public void setCertAlias(String certAlias) {
+        this.certAlias = certAlias;
     }
 
-    public String getEncryptedText() {
-        return encryptedText;
+    public String getEncryptedAesKey() {
+        return encryptedAesKey;
     }
 
-    public void setEncryptedText(String encryptedText) {
-        this.encryptedText = encryptedText;
+    public void setEncryptedAesKey(String encryptedAesKey) {
+        this.encryptedAesKey = encryptedAesKey;
+    }
+
+    public String getEncryptedData() {
+        return encryptedData;
+    }
+
+    public void setEncryptedData(String encryptedData) {
+        this.encryptedData = encryptedData;
+    }
+
+    public String getIvHex() {
+        return ivHex;
+    }
+
+    public void setIvHex(String ivHex) {
+        this.ivHex = ivHex;
     }
 }

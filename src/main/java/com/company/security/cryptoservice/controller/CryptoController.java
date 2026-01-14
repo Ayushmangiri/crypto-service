@@ -14,23 +14,25 @@ public class CryptoController {
         this.cryptoService = cryptoService;
     }
 
+
     @PostMapping("/encrypt")
     public CryptoResponse encrypt(@RequestBody EncryptRequest request) {
-        return new CryptoResponse(
-                cryptoService.encrypt(
-                        request.getKeyAlias(),
-                        request.getPlainText()
-                )
+        String encrypted = cryptoService.encrypt(
+                request.getCertAlias(),
+                request.getPlainText()
         );
+        return new CryptoResponse(encrypted);
     }
+
 
     @PostMapping("/decrypt")
     public CryptoResponse decrypt(@RequestBody DecryptRequest request) {
-        return new CryptoResponse(
-                cryptoService.decrypt(
-                        request.getKeyAlias(),
-                        request.getEncryptedText()
-                )
+        String plainText = cryptoService.decrypt(
+                request.getCertAlias(),
+                request.getEncryptedAesKey(),
+                request.getEncryptedData(),
+                request.getIvHex()
         );
+        return new CryptoResponse(plainText);
     }
 }

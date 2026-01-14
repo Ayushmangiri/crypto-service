@@ -1,15 +1,17 @@
 package com.company.security.cryptoservice.dto;
 
 public class EncryptRequest {
-    private String keyAlias;
+
+    private String certAlias;
+
     private String plainText;
 
-    public String getKeyAlias() {
-        return keyAlias;
+    public String getCertAlias() {
+        return certAlias;
     }
 
-    public void setKeyAlias(String keyAlias) {
-        this.keyAlias = keyAlias;
+    public void setCertAlias(String certAlias) {
+        this.certAlias = certAlias;
     }
 
     public String getPlainText() {
