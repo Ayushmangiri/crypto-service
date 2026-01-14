@@ -2,6 +2,7 @@ package com.company.security.cryptoservice.controller;
 
 import com.company.security.cryptoservice.dto.*;
 import com.company.security.cryptoservice.service.CryptoService;
+import org.apache.catalina.startup.SafeForkJoinWorkerThreadFactory;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,12 @@ public class CryptoController {
         );
         return new CryptoResponse(encrypted);
     }
+//        @GetMapping ("/show ")
+//        public  CryptoController show(@RestController SafeForkJoinWorkerThreadFactory safeForkJoinWorkerThreadFactory) {
+//            String show = cryptoService.toString();
+//            return getClass(encrypt());
+//        }
+
 
 
     @PostMapping("/decrypt")

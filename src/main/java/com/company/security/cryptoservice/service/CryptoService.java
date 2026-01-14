@@ -2,67 +2,110 @@ package com.company.security.cryptoservice.service;
 
 import com.company.security.cryptoservice.keystore.KeystoreManager;
 import com.company.security.cryptoservice.truststore.TrustStoreManager;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
 @Service
 public class CryptoService {
+
     private final TrustStoreManager trustStoreManager;
     private final KeystoreManager keystoreManager;
 
-    @Value("${crypto.aes.key}") private String aesKeyHex;
-    @Value("${crypto.aes.iv}") private String ivHex;
-
-    public CryptoService(TrustStoreManager trustStoreManager, KeystoreManager keystoreManager) {
+    public CryptoService(
+            TrustStoreManager trustStoreManager,
+            KeystoreManager keystoreManager
+    ) {
         this.trustStoreManager = trustStoreManager;
         this.keystoreManager = keystoreManager;
     }
-
     public String encrypt(String certAlias, String plainText) {
         try {
-            PublicKey publicKey = trustStoreManager.getCert(certAlias).getPublicKey();
-            Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            SecretKey aesKey =
+                    keystoreManager.getSecretKey("aes-key-alias");
+
+            byte[] iv = new byte[16];
+            new SecureRandom().nextBytes(iv);
+
+            byte[] encryptedData =
+                    AesUtil.encrypt(
+                            plainText.getBytes(StandardCharsets.UTF_8),
+                            aesKey,
+                            iv
+                    );
+
+            PublicKey publicKey =
+                    trustStoreManager
+                            .getCert(certAlias)
+                            .getPublicKey();
+
+            Cipher rsa =
+                    Cipher.getInstance("RSA/ECB/PKCS1Padding");
             rsa.init(Cipher.ENCRYPT_MODE, publicKey);
 
-            byte[] wrappedKey = rsa.doFinal(HexFormat.of().parseHex(aesKeyHex));
-            String encryptedAesKeyBase64 = Base64.getEncoder().encodeToString(wrappedKey);
+            byte[] encryptedAesKey =
+                    rsa.doFinal(aesKey.getEncoded());
 
-            System.out.println("\n==================================================");
-            System.out.println("USE THIS AS 'encryptedAesKey' IN DECRYPT REQUEST:");
-            System.out.println(encryptedAesKeyBase64);
-            System.out.println("==================================================\n");
+            System.out.println("encryptedAesKey = "
+                    + Base64.getEncoder()
+                    .encodeToString(encryptedAesKey));
 
-            // 2. AES se data encrypt karna
-            byte[] encryptedData = Aes256Util.encrypt(plainText.getBytes(), aesKeyHex, ivHex);
-            return Base64.getEncoder().encodeToString(encryptedData);
+            System.out.println("ivHex = "
+                    + HexFormat.of().formatHex(iv));
+
+            return Base64.getEncoder()
+                    .encodeToString(encryptedData);
+
         } catch (Exception e) {
-            throw new RuntimeException("Encryption Error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Encryption failed", e);
         }
     }
 
-    public String decrypt(String certAlias, String encryptedAesKeyBase64, String encryptedDataBase64, String ivHexFromReq) {
+    public String decrypt(
+            String certAlias,
+            String encryptedAesKeyBase64,
+            String encryptedDataBase64,
+            String ivHex
+    ) {
         try {
-            PrivateKey privateKey = keystoreManager.getPrivateKey(certAlias);
-            Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            PrivateKey privateKey =
+                    keystoreManager.getPrivateKey(certAlias);
+
+            Cipher rsa =
+                    Cipher.getInstance("RSA/ECB/PKCS1Padding");
             rsa.init(Cipher.DECRYPT_MODE, privateKey);
 
-            byte[] aesKeyBytes = rsa.doFinal(Base64.getDecoder().decode(encryptedAesKeyBase64));
-            String decryptedAesKeyHex = HexFormat.of().formatHex(aesKeyBytes);
+            byte[] aesKeyBytes =
+                    rsa.doFinal(
+                            Base64.getDecoder()
+                                    .decode(encryptedAesKeyBase64)
+                    );
 
-            byte[] plainBytes = Aes256Util.decrypt(
-                    Base64.getDecoder().decode(encryptedDataBase64),
-                    decryptedAesKeyHex,
-                    ivHexFromReq
-            );
+            SecretKey aesKey =
+                    new SecretKeySpec(aesKeyBytes, "AES");
 
-            return new String(plainBytes);
+            byte[] plain =
+                    AesUtil.decrypt(
+                            Base64.getDecoder()
+                                    .decode(encryptedDataBase64),
+                            aesKey,
+                            HexFormat.of().parseHex(ivHex)
+                    );
+
+            return new String(plain, StandardCharsets.UTF_8);
+
         } catch (Exception e) {
-            throw new RuntimeException("Decryption failed: RSA Key unwrap issue or wrong Alias.");
+            e.printStackTrace();
+            throw new RuntimeException("Decryption failed", e);
         }
     }
 }
